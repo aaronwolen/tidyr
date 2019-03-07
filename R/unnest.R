@@ -158,10 +158,16 @@ unnest.data.frame <- function(data, ..., .drop = NA, .id = NULL,
   out <- dplyr::bind_cols(rest, unnested_atomic, unnested_dataframe)
 
   # Preserve column order
-  all_vars <- intersect(names(data), names(out))
-  all_vars <- c(all_vars, setdiff(names(out), all_vars))
+  nested_vars <- imap(data, function(.x, .y) {
+    if (is.data.frame(.x[[1]])) {
+      return(names(.x[[1]]))
+    } else {
+      return(.y)
+    }
+  })
 
-  reconstruct_tibble(data, out[all_vars])
+  ordered_vars <- intersect(unlist(nested_vars, use.names = FALSE), names(out))
+  reconstruct_tibble(data, out[ordered_vars])
 }
 
 list_col_type <- function(x) {
